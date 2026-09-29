@@ -1,0 +1,21 @@
+# Local device evidence, proprietary payloads and build artifacts
+/private/
+/backups/
+/artifacts/
+/build/
+/sources/
+/logs/
+/tmp/
+*.img
+*.img.*
+*.bin
+*.tar.md5
+*.iso
+*.qcow2
+*.vhdx
+*.ko
+*.pem
+*.key
+.env
+.env.*
+!.env.example
