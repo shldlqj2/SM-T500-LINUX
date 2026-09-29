@@ -11,6 +11,8 @@
 
 WSL2 Ubuntu 24.04가 설치되어 있다는 사실만 확인했다. 패키지·디스크 공간·메모리·USB 접근은 미검증이다. 호스트의 docker-desktop 배포판은 태블릿 Docker 구현과 별개다.
 
+도구의 구체적 실행 계약은 [빌드·산출물 구현 설계](design/02-build-artifacts.md)와 [데이터 계약](design/03-data-contracts.md)으로 확정한다. 공통 CLI는 Python 3.11 이상과 표준 라이브러리를 사용하며 sources/build 명령은 Linux/WSL에서 직접 실행한다.
+
 ## 사전 조사
 
 WSL 내부 배포판 버전, CPU/RAM, 사용 가능한 디스크, Git·컴파일러·Python·QEMU 버전을 조사한다. 빌드 병렬 수는 호스트 메모리에 맞춰 정하고 첫 빌드에서 peak 메모리와 디스크 사용량을 기록한다.
@@ -40,7 +42,7 @@ Orca 관리 worktree를 실제로 추가하는 경우 orca-cli 지침을 따른�
 
 ## 빌드 산출물 계약
 
-필수 항목은 build ID, 소스·도구 체인, 최종 .config, 커널 release, Image/DT/모듈 해시, build log, boot 패키징 보고서, rootfs ID다. 구체적인 이미지 계약은 [05 문서](05-boot-and-image-design.md)를 따른다.
+전체 부팅 세트의 필수 항목은 build ID, 소스·도구 체인, 최종 .config, 커널 release, Image/DT/모듈 해시, build log, boot 패키징 보고서, rootfs ID다. 전체 이미지 관계는 [05 문서](05-boot-and-image-design.md)를 따른다. 이번 도구 v1은 그중 kernel bundle까지 생성하며 아직 없는 boot·rootfs를 포함한 것으로 표시하지 않는다. kernel bundle의 필드와 검사 방법은 [데이터 계약](design/03-data-contracts.md)을 따른다.
 
 커널 빌드와 이미지 조립, rootfs 생성, 기기 기록을 별도 명령/도구로 설계한다. 빌드 성공 후 자동 flash하지 않는다.
 

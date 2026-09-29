@@ -6,7 +6,7 @@ Samsung Galaxy Tab A7 Wi-Fi **SM-T500 / gta4lwifi**에 Debian을 직접 부팅�
 
 ## 현재 상태
 
-- **문서화 단계**: 포팅·복구·검증·학습 계획을 작성했다.
+- **구현 설계 단계**: 포팅·복구·검증·학습 계획과 조사 도구·빌드 관리·데이터 계약 설계서를 작성했다. 도구 코드는 아직 없다.
 - 사용자 설명: 부트로더 해제·루팅된 LineageOS 설치 상태이며 microSD를 보유하고 있다.
 - PC 조사: Windows PowerShell 환경과 WSL2 Ubuntu 24.04 설치를 확인했다.
 - 실기기 조사·백업·커널 빌드·이미지 기록·One UI 복구 시험은 **아직 수행하지 않았다**.
@@ -19,9 +19,21 @@ Samsung Galaxy Tab A7 Wi-Fi **SM-T500 / gta4lwifi**에 Debian을 직접 부팅�
 1. [에이전트 작업 지침](AGENTS.md)을 읽는다.
 2. [최신 인수인계](HANDOFF.md)에서 현재 상태와 다음 작업을 확인한다.
 3. [목표와 구조](docs/01-goals-and-architecture.md)를 읽는다.
-4. [기기 조사](docs/02-device-investigation.md)와 [복구 계획](docs/03-backup-and-recovery.md)을 진행한다.
+4. 도구 구현은 아래 구현 설계서를 읽고, 실기기 단계는 [기기 조사](docs/02-device-investigation.md)와 [복구 계획](docs/03-backup-and-recovery.md)을 따른다.
 
-지금 해야 할 일은 ADB 연결 환경을 준비하고 읽기 전용 조사를 수행하는 것이다. 이 저장소의 문서를 작성했다는 이유로 기기 변경을 바로 시작하지 않는다.
+현재 요청 범위는 설계서 작성까지다. 다음 구현 단계는 조사 도구와 합성 fixture 검증이며, 실제 기기 조사는 이후 착수 범위에 맞춰 basic 수집부터 진행한다.
+
+## 구현 설계서
+
+사용자는 '단계별 실행 + 설명 보고서' 방식을 선택했다. 먼저 조사·빌드 관리를 구현 가능한 수준으로 정하고 initramfs 내부 구현은 다음 설계 묶음에서 다룬다.
+
+| 문서 | 확정한 인터페이스 |
+| --- | --- |
+| [조사 도구](docs/design/01-device-collector.md) | CLI, 대상 선택, probe, root·시간·출력 제한, 부분 실패, 보고서 |
+| [빌드·산출물 관리](docs/design/02-build-artifacts.md) | 소스 고정, recipe, 실행 단계, 모듈 staging, 산출물 게시·검사 |
+| [데이터 계약 v1](docs/design/03-data-contracts.md) | JSON 필드·상태·종료 코드·근거·개인정보·경로·해시 |
+
+설계서의 명령과 JSON은 향후 구현할 계약이다. 실제 도구·기기별 ready lock·빌드 이미지는 아직 생성하지 않았다.
 
 ## 계획 문서
 

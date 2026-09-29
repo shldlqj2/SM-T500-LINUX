@@ -41,7 +41,7 @@ LineageOS BoardConfigCommon의 ramdisk offset 표기는 0x020000000이고 참고
 | 기록 | 허용 대상 파티션 이름·실측 크기·이미지 크기·헤더 보고서 |
 | 복귀 | 마지막 정상 이미지 ID·위치·복구 문서 |
 
-manifest의 정확한 JSON 키 등 구현 형식은 도구 구현 시 위 필드를 그대로 반영한다. 문서만 작성하는 단계에서 자동 flash용 wire format을 추가하지 않는다.
+조사·빌드 입력·kernel bundle의 JSON 필드와 종료 코드는 [데이터 계약 v1](design/03-data-contracts.md)으로 확정했다. 위 표는 최종 부팅 세트의 관계를 설명하며 kernel bundle만 생성했다고 initramfs·rootfs·복구 검증이 완료된 것은 아니다. boot 조립·initramfs 내부 계약과 실제 기기 기록 형식은 다음 설계 묶음에서 확정한다.
 
 ## initramfs 설계
 
