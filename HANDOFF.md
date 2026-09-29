@@ -2,7 +2,7 @@
 
 ## 갱신·전달 상태
 
-- 갱신 시각: 2026-09-29T17:05:02+09:00 검증 결과 반영.
+- 갱신 시각: 2026-09-29T17:08:43+09:00 설계 문서 push 결과 반영.
 - 작성 주체: 현재 주 에이전트.
 - 현재 단계: M0 착수 전, 조사·빌드·산출물 도구의 구현 설계 완료.
 - 기록 상태: 구현 설계서 3개 작성 및 기존 문서 연결, 문서 정적 검증 완료. 도구 구현·실기기 검증은 미실행.
@@ -21,13 +21,13 @@
 - Windows 경로: C:\Users\SSAFY\orca\projects\PlayGround\SM-T500-LINUX
 - Shell: PowerShell.
 - Branch: master.
-- HEAD: de4ad089eeb75fa82647a682697dc0cef9565fbf, docs: add SM-T500 Linux porting plan.
-- 기존 문서: 위 첫 커밋이 origin/master에 푸시된 상태이며 이번 시작 시 worktree는 깨끗했다. 원격 반영은 앞선 push 성공과 현재 tracking ref 일치에 근거한다.
-- 현재 변경: 조사·빌드 설계서 3개와 연결 문서 7개를 `docs: specify collector and build artifact contracts` 커밋으로 반영했다. 이후 origin/master 푸시 상태는 아래 Git 검증 기록을 따른다.
+- 설계 문서 commit: 7631e5a, `docs: specify collector and build artifact contracts`.
+- 기존 문서: 첫 커밋은 이번 작업 시작 시 origin/master에 반영된 상태였고 worktree는 깨끗했다.
+- 현재 변경: 조사·빌드 설계서 3개와 연결 문서 7개를 위 commit으로 기록하고 origin/master에 푸시했다.
 - WSL2: Ubuntu-24.04 설치를 확인했다. 커널 빌드용 패키지·디스크·메모리 설정은 미검증이다.
 - ADB: 현재 PATH와 이전에 조사한 일부 후보 디렉터리에서 찾지 못했다. PC 전체에 없다고 확정한 것은 아니다.
 
-기존 문서와 이번 설계 변경은 Git commit으로 전달할 수 있다. 새 checkout에서는 현재 master의 push 반영 여부를 확인한다. [전달 지침](docs/handoff/GUIDE.md)을 따른다.
+기존 문서와 이번 설계 변경은 Git으로 전달할 수 있다. 새 checkout에서 master의 최신 상태를 확인한다. [전달 지침](docs/handoff/GUIDE.md)을 따른다.
 
 ## 기기 상태
 
@@ -56,7 +56,7 @@
 | 초기 문서 commit·push | 완료 | de4ad08, master → origin/master |
 | 조사·빌드·데이터 계약 설계 | 작성 완료 | docs/design/01~03, 실제 CLI 코드 없음 |
 | 새 설계 문서 정적 검사 | 검증 완료 | Markdown 22개·상대 링크 87개·JSON 예시 2개, 검사 문제 0건 |
-| 설계 문서 commit·push | 진행 중 | commit 생성 완료, origin/master 반영 확인 후 완료로 갱신 |
+| 설계 문서 commit·push | 완료 | 7631e5a, master → origin/master |
 
 ## 중요한 발견·미확인 사항
 
@@ -111,7 +111,7 @@
 - 환경·cwd: Windows PowerShell, 위 저장소 경로.
 - 검사: rg --files로 Markdown을 열거하고 UTF-8로 읽어 상대 링크 존재, 코드 fence 짝, 대체 문자, 후행 공백, JSON 예시의 ConvertFrom-Json 문법 검사를 수행했다.
 - 결과: Markdown 22개, 상대 링크 87개, JSON 예시 2개, 검사 문제 0건, 명령 종료 코드 0.
-- Git 검사: git diff --check 통과. LF→CRLF 안내는 있었으나 공백 오류는 없었다. 검증 당시 HEAD와 로컬 origin/master 추적 ref는 de4ad08로 일치했다. 그 뒤 사용자 요청으로 새 설계 커밋을 생성했다. origin/master 푸시 여부는 아래에서 확인 후 기록한다.
+- Git 검사: git diff --check 통과. LF→CRLF 안내는 있었으나 공백 오류는 없었다. 정적 검증 당시 HEAD와 origin/master는 de4ad08로 일치했다. 이후 사용자 요청으로 `git push origin master`를 실행했고 종료 코드 0, `de4ad08..7631e5a master -> master`를 확인했다.
 - 계약 대조: CLI의 미구현 표기, source lock의 draft/ready 경계, 수집 partial·중단 상태, 개인정보 공유 제한, bundle 필수 role과 FileDigest 필드 정의를 점검했다.
 - 수정: 모듈이 없는 bundle도 build-metadata를 갖도록 명시하고 manifest·최종 build-run 사이의 순환 참조를 피하도록 정리했다.
 - 한계: JSON 문법 확인은 계약 validator 시험이 아니다. 외부 링크 가용성·렌더링·도구 코드·실제 빌드·실기기 시험은 검증하지 않았다.
