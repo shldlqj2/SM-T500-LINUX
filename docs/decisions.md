@@ -78,12 +78,21 @@
 
 ## D011. 조사·빌드 도구와 데이터 계약 v1
 
-- 날짜: 2026-09-29. 상태: 설계 채택, 코드 미구현.
+- 날짜: 2026-09-29. 상태: 설계 채택. 2026-09-30 수집기 구현·합성 검증, 빌드 도구 미구현.
 - 선택: Python 3.11 이상·표준 라이브러리 CLI. Windows/Linux 공통 수집·보고서, Linux/WSL 소스 준비·빌드. source lock·recipe·kernel bundle의 JSON v1을 정의한다.
 - 범위: 이번에는 조사·빌드 관리를 먼저 확정한다. initramfs 내부 구현·rootfs 생성·boot 조립·flash 도구는 다음 설계 대상이다.
 - 영향: 정확한 SHA·도구 체인·기기 대응 근거가 미확정이면 draft로 보관하고 실행하지 않는다. 빌드 성공·파일 무결성·실기기 시험은 별도 상태다.
 - 세부 기준: [수집기](design/01-device-collector.md), [빌드 관리](design/02-build-artifacts.md), [데이터 계약](design/03-data-contracts.md).
 - 재검토: 실제 ROM source·toolchain 요구가 계약으로 표현되지 않으면 관측 근거와 함께 계약·reader·fixture를 같이 변경한다.
+
+## D012. exec-out 형식 검사와 식별 이전 root 제한
+
+- 날짜: 2026-09-30. 상태: 구현 반영.
+- 근거: [ADB client 구현](https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/main/client/commandline.cpp)은 exec-out raw stream을 stdout으로 복사하고 원격 종료 frame 없이 client 성공을 반환한다. host stderr 분리가 remote stderr 분리까지 보장하지 않는다.
+- 선택: binary remote_exit_code는 null, gzip CRC·길이·DT frame 검사로 읽기 결과를 판정한다. 고정 wrapper marker로 부재·권한 제한을 구분한다. gzip 압축 해제는 16MiB로 제한한다.
+- 식별 관문: root 허용 여부와 관계없이 정확한 모델·코드명이 관측되기 전 su를 요청하지 않는다. 이후 권한 부족 읽기에만 기존 adapter를 사용한다.
+- 검증: CRC·부분 파일·DT cell·비 UTF-8 원본·미확인 모델에서 root 미호출을 합성 응답으로 시험했다. 실제 su와 Android 전송 동작은 미검증이다.
+- 영향: 첫 설계의 'stderr 분리'는 ADB client 기준으로 명확히 정정했다. 수집 사실과 실제 기기 동작의 구분은 유지한다.
 
 ## 신규 결정 양식
 

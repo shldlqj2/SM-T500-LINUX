@@ -19,3 +19,8 @@
 .env
 .env.*
 !.env.example
+
+# Python local caches and environments
+__pycache__/
+*.py[cod]
+.venv/

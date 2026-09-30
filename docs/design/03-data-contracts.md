@@ -1,6 +1,6 @@
 # 구현 설계 03. 데이터 계약 v1
 
-상태: 설계 확정. 아래 JSON은 설명 또는 합성 fixture이며 실제 기기 관측·빌드 결과가 아니다. 구현용 JSON 파일·schema validator·테스트는 아직 없다.
+상태: collection v1 reader/writer·계약 validator·합성 테스트 구현. source lock·recipe·build·artifact reader/writer는 후속 구현이다. 아래 JSON 예시는 합성 자료이며 실제 기기 관측·빌드 결과가 아니다.
 
 이 문서는 [수집기](01-device-collector.md)와 [빌드 관리](02-build-artifacts.md)가 공유하는 형식의 기준이다. boot/rootfs/flash 실행 계약은 후속 설계이며 여기서는 kernel bundle까지 정의한다.
 
@@ -117,6 +117,8 @@ error_code와 status는 다른 축이다. 예를 들어 partial/device_disconnec
 FileDigest는 path(string), size_bytes(0 이상의 int), sha256(string) 필드를 갖는다. path는 도구 소스 루트 기준 상대 경로이며 sha256은 공통 해시 규칙을 따른다. tool_revision.source_files는 실제 실행 도구 코드의 FileDigest 배열이다. Git dirty인 개발 도구도 수집은 가능하되 그 실행 코드 목록을 남긴다. 단순 commit ID만으로 로컬 수정이 없는 것처럼 보이지 않게 한다.
 
 Probe 필드는 id, parser_version, required, status, error_code, attempts다. required는 대상 식별·kernel.release 등에 적용하며 프로필의 나머지 누락도 전체 partial 판정에 반영한다.
+
+collector의 진단 probe ID는 host.adb_version, transport.devices, transport.shell_ok, transport.shell_fail, privilege.root다. 마지막 항목은 root 확인이 필요한 경우에만 존재한다. complete/partial 실행은 observed 모델·코드명과 해당 probe의 ok 상태를 모두 요구한다. 현재 parser_version은 1이며 reader가 모르는 버전·probe ID는 거부한다.
 
 Attempt 필드는 privilege(shell/root), argv(string 배열), started_at, duration_ms, host_exit_code(int/null), remote_exit_code(int/null), status, error_code, stdout(Capture/null), stderr(Capture/null)다. argv는 serial 등 비공개 값이 포함될 수 있으므로 private 기록에만 둔다.
 

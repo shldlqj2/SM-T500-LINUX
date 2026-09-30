@@ -1,6 +1,6 @@
 # 구현 설계 01. 기기 조사 도구
 
-상태: 설계 확정, 코드 미구현, 실기기 수집 미실행.
+상태: 수집기 v1 코드·합성 테스트 구현, Windows/WSL 검증. 실기기 수집 미실행. 사용법은 [도구 안내](../../tools/README.md)를 따른다.
 
 이 문서는 [기기 조사 계획](../02-device-investigation.md)의 실행 도구를 정의한다. 데이터 필드·상태·종료 코드의 기준은 [데이터 계약](03-data-contracts.md)이다. 빌드 도구는 [별도 설계](02-build-artifacts.md)를 따른다.
 
@@ -30,7 +30,7 @@ Python 3.11 이상, 표준 라이브러리를 사용한다. 진입점은 tools/p
 
 ## 3. CLI 계약
 
-아래는 향후 구현할 인터페이스이며 현재 실행할 수 있는 도구가 아니다.
+아래 인터페이스는 구현된 수집기 명령이다. 기본·실기기 조건은 [도구 안내](../../tools/README.md)를 확인한다.
 
 ~~~text
 python tools/portctl.py doctor --scope collect [--adb <file>]
@@ -64,6 +64,8 @@ python tools/portctl.py report --run <run-directory> --view shareable
 ## 5. 수집 항목
 
 고정 probe 목록은 코드에서 정의하고 각 항목에 목적·명령·해석기·권한·상한을 연결한다. 로컬 JSON 설정으로 임의 기기 명령을 주입하는 기능은 없다.
+
+진단 기록도 probe로 보존한다. host.adb_version은 ADB version, transport.devices는 연결 목록, transport.shell_ok/transport.shell_fail은 고정 exit 0/37의 전달 시험이다. privilege.root는 필요한 경우에만 생성하는 su UID 확인이다. 이 항목들의 argv·원본·해시도 비공개 계약을 따른다. transport_id가 연결 목록에 있으면 -s와 -t를 함께 지정해 관측한 transport를 고정한다.
 
 ### basic
 
@@ -110,13 +112,15 @@ sysfs size는 해당 인터페이스의 512-byte sector 규칙으로 환산하�
 
 ## 6. root와 바이너리 수집
 
-extended도 일반 shell 권한부터 사용한다. permission_denied 항목이 있고 --allow-root가 있을 때 한 번의 고정 su -c 'id -u'로 UID 0 여부를 확인한다. 기본 adapter는 이 호출을 지원하는 기존 su이며 다른 문법을 추측해 반복하지 않는다.
+extended도 일반 shell 권한부터 사용한다. SM-T500/gta4lwifi 식별 통과 이후 permission_denied 항목이 있고 --allow-root가 있을 때 한 번의 고정 su -c 'id -u'로 UID 0 여부를 확인한다. 식별 실패를 root로 우회하지 않는다. 기본 adapter는 이 호출을 지원하는 기존 su이며 다른 문법을 추측해 반복하지 않는다.
 
 root 확인 시간은 30초다. 거부·미지원·timeout이면 원래 결과를 보존하고 일반 관측을 계속한다. 승인 UI는 사용자가 다뤄야 한다. allow-root가 없으면 su probe 자체를 만들지 않는다.
 
 root 재시도는 항목당 한 번이다. 일반·root 실행을 attempts에 각각 남긴다. 권한 실패가 아닌 missing file, parse_error를 root로 무조건 다시 읽지 않는다.
 
-바이너리는 adb exec-out을 통해 stdout을 바이트로 저장하고 stderr와 분리한다. exec-out transport 성공만으로 원격 읽기 성공을 확정하지 않는다. gzip header·CRC·종료, DT cell 길이 등 형식 검증을 함께 한다. 원격 종료 상태를 얻지 못하면 remote_exit_code를 null로 둔다. 원본을 PowerShell 텍스트 리다이렉션에 통과시키지 않는다.
+바이너리는 adb exec-out을 통해 stdout을 바이트로 저장하고 ADB client stderr와 분리한다. 원격 stderr는 exec-out의 raw stream에 섞일 수 있다. exec-out transport 성공만으로 원격 읽기 성공을 확정하지 않는다. gzip header·CRC·종료, DT cell 길이 등 형식 검증을 함께 한다. 원격 종료 상태를 얻지 못하면 remote_exit_code를 null로 둔다. 원본을 PowerShell 텍스트 리다이렉션에 통과시키지 않는다.
+
+kernel.config는 고정 wrapper가 경로 부재·읽기 제한을 PORTCTL-ERROR marker로 전달하고 정상 데이터는 gzip 그대로 보낸다. 압축 해제는 16MiB 한도로 제한한다. dt.identity는 PORTCTL-DT1 header와 각 고정 속성의 이름·상태·byte 길이, 원본 바이트로 frame을 만든다. sysfs 관측은 PORTCTL-SYS1 header와 고정 tab record를 사용한다. 형식이 맞지 않는 출력은 parse_error이며 성공으로 복원하지 않는다.
 
 ## 7. 실행 제한·상태 전이
 
@@ -149,7 +153,7 @@ report 명령은 새 report ID의 파일을 생성한다. 기존 보고서를 �
 
 ## 9. 구현 합격 기준
 
-가짜 ADB와 합성 출력으로 다음을 먼저 검증한다. 실제 테스트 코드는 도구 구현 단계에 추가한다.
+가짜 ADB와 합성 출력으로 아래 항목을 검증하는 테스트를 추가했다. tests/test_collector.py는 실행·계약·보고서를, tests/test_remote_scripts.py는 Linux 합성 파일에서 실제 고정 shell script를 검사한다. 최신 실행 결과는 HANDOFF.md에 기록한다.
 
 - 대상 없음·복수 대상·unauthorized·offline·모델/코드명 불일치.
 - allow-root 미설정 시 su 미실행, 설정 시 필요한 항목에만 재시도.
