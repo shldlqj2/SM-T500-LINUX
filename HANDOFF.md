@@ -2,7 +2,7 @@
 
 ## 갱신·전달 상태
 
-- 갱신 시각: 2026-09-30T09:51:00+09:00 수집기 구현·검증 결과 반영.
+- 갱신 시각: 2026-09-30T14:45:11+09:00 수집기 구현 커밋·푸시 결과 반영.
 - 작성 주체: 현재 주 에이전트.
 - 현재 단계: 수집기 v1 구현·합성 검증 완료, 실기기 M0 착수 전.
 - 기록 상태: doctor/collect/report·basic/extended probe·collection JSON 계약 검사·설명 보고서 구현. 실기기 수집과 빌드 도구는 미실행·미구현.
@@ -21,15 +21,15 @@
 - Windows 경로: C:\Users\SSAFY\orca\projects\PlayGround\SM-T500-LINUX
 - Shell: PowerShell.
 - Branch: master.
-- 이번 작업 기준 HEAD: 61351399946b165e3a261d7c5b472b18cf4d2f37, `docs: record design push in handoff`.
+- 수집기 구현 작업 시작 시 HEAD: 61351399946b165e3a261d7c5b472b18cf4d2f37, `docs: record design push in handoff`.
 - 설계 문서 commit: 7631e5a, `docs: specify collector and build artifact contracts`.
 - 기존 문서: 위 HEAD까지 origin/master 추적 ref와 일치했고 이번 작업 시작 시 worktree는 깨끗했다.
-- 현재 변경: tools/ 수집기·사용 안내, tests/ 합성 검증 신규 파일. .gitignore, AGENTS.md, README.md, HANDOFF.md, docs/decisions.md, docs/design/01·03을 갱신했다. 이번 구현 변경은 미커밋이다.
+- 수집기 구현 commit: `36c02c7`, `feat: implement SM-T500 device collector`. 수집기·테스트·설계/안내 문서 23개 파일을 포함하며 `origin/master` 푸시를 완료했다.
 - WSL2: Ubuntu-24.04 설치를 확인했다. 커널 빌드용 패키지·디스크·메모리 설정은 미검증이다.
 - Python: Windows 3.12.10, WSL Ubuntu-24.04 3.12.3에서 합성 시험을 실행했다.
 - ADB: 이번 doctor --scope collect 결과 tool_missing·종료 코드 3. 현재 PATH에서 찾지 못한 결과이며 PC 전체에 없다고 확정한 것은 아니다. 실기기 연결·root는 검사하지 않았다.
 
-기존 설계 문서는 Git으로 전달할 수 있다. 이번 도구·테스트·문서 수정은 미커밋·미추적이므로 새 checkout에 자동 전달되지 않는다. [전달 지침](docs/handoff/GUIDE.md)에 따라 실제 변경 파일을 전달한다. 이번 구현 작업에서는 새 commit·push를 수행하지 않았다.
+수집기 구현은 `36c02c7`로 커밋해 `master`에 기록하고 `origin/master`에 푸시했다. 푸시 후 로컬 HEAD와 `origin/master`가 일치하고 worktree가 깨끗한 것을 확인했다. [전달 지침](docs/handoff/GUIDE.md)에 따라 실제 변경 파일을 전달한다.
 
 ## 기기 상태
 
@@ -147,4 +147,4 @@
 
 한계: Windows의 실제 Ctrl+C 전달과 NTFS junction 시험, 실제 ADB client·ROM su·SELinux 정책·태블릿 probe는 미검증이다. 합성 shell 시험은 임시 트리에 대해 수행했다. 원본·보고서는 테스트 fixture이며 하드웨어 동작 결과가 아니다.
 
-최종 문서·Git 검사: Markdown 23개·상대 링크 92개·JSON 예시 2개, 문제 0건. 신규 Python 파일 15개의 대체 문자·후행 공백 문제 0건. git diff --check 통과. 기준 HEAD는 6135139이며 이번 구현은 미커밋 상태로 남았다. 문서 검사는 같은 PowerShell cwd에서 UTF-8 읽기·링크 Test-Path·JSON ConvertFrom-Json 방식으로 수행했다.
+최종 문서·Git 검사: Markdown 23개·상대 링크 92개·JSON 예시 2개, 문제 0건. 신규 Python 파일 15개의 대체 문자·후행 공백 문제 0건. git diff --check 통과. 정적 검사 기준 HEAD는 6135139이며, 검증 후 `36c02c7`을 커밋·푸시했다. 푸시 확인 시점에는 HEAD와 origin/master가 모두 `36c02c7ab92e0f86b5e54beb9101d0dac2531743`이고 worktree는 깨끗했다. 문서 검사는 같은 PowerShell cwd에서 UTF-8 읽기·링크 Test-Path·JSON ConvertFrom-Json 방식으로 수행했다.
