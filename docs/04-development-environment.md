@@ -5,13 +5,17 @@
 | 환경 | 담당 |
 | --- | --- |
 | Windows | ADB·USB 장치 인식, 검증된 Samsung 복원 도구, 문서 작업 |
-| WSL2 Ubuntu 24.04 | 소스·크로스 컴파일·이미지 분석·rootfs 생성·QEMU |
+| Linux 빌드 환경(우선 WSL2 Ubuntu 24.04 평가) | pmbootstrap·패키지/커널 빌드·이미지 분석·rootfs 생성·QEMU |
 | QEMU arm64 | 커널 기초·initramfs·systemd·실패 주입 실습 |
 | SM-T500 | 실제 부트로더·DT·드라이버·전원·복구 검증 |
 
-WSL2 Ubuntu 24.04가 설치되어 있다는 사실만 확인했다. 패키지·디스크 공간·메모리·USB 접근은 미검증이다. 호스트의 docker-desktop 배포판은 태블릿 Docker 구현과 별개다.
+[N1 실행](research/nura-n1-rootfs-2026-10-30.md)에서 WSL2 Ubuntu 24.04·Linux ext4 작업 경로·메모리/디스크·pmbootstrap 3.12.1·mount/chroot·ARM64 QEMU user/binfmt·rootfs 패키지 설치를 검증했다. USB 기기 접근·kernel 빌드·실기기 부팅은 미검증이다. 호스트의 docker-desktop 배포판은 태블릿 Docker 구현과 별개다.
 
-도구의 구체적 실행 계약은 [빌드·산출물 구현 설계](design/02-build-artifacts.md)와 [데이터 계약](design/03-data-contracts.md)으로 확정한다. 공통 CLI는 Python 3.11 이상과 표준 라이브러리를 사용하며 sources/build 명령은 Linux/WSL에서 직접 실행한다.
+[N2](research/nura-n2-dt-2026-10-30.md)에서는 별도 WSL 작업 공간에서 DT·기기 APK 빌드·공식 LTS 설치·표준 initramfs 생성과 패키지 신뢰 경로를 검사했다. 호스트 GCC/dtc와 격리 dtschema를 사용했으며 전체 kernel 컴파일 환경의 검증으로 확대하지 않는다.
+
+현재 빌드 기본 경로는 [Nura 26.06 포팅 계획](14-nura-26.06-port-plan.md)의 pmbootstrap/Nura 표준 도구다. 기존 [빌드·산출물 구현 설계](design/02-build-artifacts.md)와 [데이터 계약](design/03-data-contracts.md)의 출처·해시·상태 원칙을 유지하되 미구현 자체 빌드 엔진을 우선 만들지 않는다. 수집기는 Python 3.11 이상·표준 라이브러리 구현을 유지한다.
+
+공식 pmbootstrap 문서는 WSL 동작을 공식 지원으로 보장하지 않는다. 이번에는 실제 사용한 mount/chroot/binfmt·패키지 생성 범위를 검증했다. 다른 WSL 버전·kernel 빌드·새 mount 경로의 성공까지 일반화하지 않으며 구체적 장애가 생기면 별도 Linux 환경을 평가한다.
 
 ## 사전 조사
 
@@ -26,7 +30,7 @@ Orca 관리 worktree를 실제로 추가하는 경우 orca-cli 지침을 따른�
 - 소스: Git, 필요한 경우 해당 ROM의 repo manifest 도구.
 - 커널 빌드: 기준 소스가 요구하는 Clang/LLVM 또는 GCC, make, bison, flex, bc, OpenSSL·ELF 개발 헤더 등.
 - 이미지: 출처·커밋을 고정한 AOSP unpack_bootimg/mkbootimg/avbtool, dtc, DTBO 분석 도구.
-- 사용자 공간: debootstrap 또는 mmdebstrap 중 초기에는 debootstrap, qemu-user-static/binfmt 지원, e2fsprogs, cpio, gzip, kmod.
+- 사용자 공간·패키지·이미지: v26.06 pmaports와 호환되는 pmbootstrap, Nura 표준 initramfs·devicepkg·boot 패키징, apk, 필요한 qemu-user/binfmt·e2fsprogs·kmod. debootstrap/mmdebstrap은 현재 rootfs 생성 도구가 아니다.
 - 가상 실습: qemu-system-aarch64, GDB, BusyBox 빌드 도구.
 - 검증: shell·Git·해시 도구, 필요한 최소 lint 도구.
 
@@ -36,13 +40,13 @@ Orca 관리 worktree를 실제로 추가하는 경우 orca-cli 지침을 따른�
 
 각 소스마다 URL, branch, 실제 commit SHA, 하위 저장소 SHA, patch series를 기록한다. branch 이름만으로 재현 가능하다고 판단하지 않는다.
 
-공개 최신 브랜치를 현재 기기의 대응 소스로 단정하지 않는다. ROM release 정보·빌드 manifest·커널 식별자를 연결해 기준 커밋을 확정한다. 네트워크에서 가져온 build script는 실행 전에 다운로드 대상과 외부 쓰기 동작을 읽는다.
+Nura v26.06의 공식 기준 SHA와 선택한 kernel·로컬 SM-T500 패치·설정을 따로 고정한다. 순정/기존 포트 자료는 모델·부품·DT·firmware 근거와 연결하며 기존 kernel/config를 자동 상속하지 않는다. 네트워크에서 가져온 build script는 실행 전에 다운로드 대상과 외부 쓰기 동작을 읽는다.
 
 빌드 컨테이너를 사용하는 경우 digest와 mount 경로를 기록한다. 빌드에 필요한 권한과 기기 기록 권한을 섞지 않는다. 전체 Android 빌드는 제한적 HAL 구현에 실제로 필요한 시점까지 미룬다.
 
 ## 빌드 산출물 계약
 
-전체 부팅 세트의 필수 항목은 build ID, 소스·도구 체인, 최종 .config, 커널 release, Image/DT/모듈 해시, build log, boot 패키징 보고서, rootfs ID다. 전체 이미지 관계는 [05 문서](05-boot-and-image-design.md)를 따른다. 이번 도구 v1은 그중 kernel bundle까지 생성하며 아직 없는 boot·rootfs를 포함한 것으로 표시하지 않는다. kernel bundle의 필드와 검사 방법은 [데이터 계약](design/03-data-contracts.md)을 따른다.
+전체 부팅 세트의 필수 항목은 build ID, 소스·도구 체인, 최종 .config, 커널 release, Image/DT/모듈 해시, build log, boot 패키징 보고서, rootfs ID다. 전체 이미지 관계는 [05 문서](05-boot-and-image-design.md)를 따른다. portctl v1의 kernel bundle은 [데이터 계약](design/03-data-contracts.md)에 정의된 설계이며 생성 CLI는 미구현이다. pmbootstrap으로 만든 N1/N2 관측용 자료와 구분한다.
 
 커널 빌드와 이미지 조립, rootfs 생성, 기기 기록을 별도 명령/도구로 설계한다. 빌드 성공 후 자동 flash하지 않는다.
 
@@ -59,14 +63,14 @@ QEMU virt 머신용 upstream arm64 커널을 별도로 빌드한다. SM-T500 제
 5. 잘못된 init·누락 rootfs·제한된 OOM 등 실패 실습.
 6. GDB·ftrace 또는 사용할 수 있는 tracing 기능으로 코드 경로 관측.
 
-QEMU에서 성공한 사용자 공간 구성도 실제 기기의 4.19 커널에서 재검증한다. QEMU 성공은 SM-T500의 패널·무선·전원 지원 증거가 아니다.
+QEMU에서 성공한 사용자 공간 구성도 선택한 SM-T500 kernel·DT·모듈에서 재검증한다. QEMU 성공은 SM-T500의 패널·무선·전원 지원 증거가 아니다. 자체 /init 실습은 학습용이며 Nura 표준 initramfs를 대체하는 기본 구현이 아니다.
 
 ## 완료 조건
 
 - WSL 환경 및 도구 체인 명세가 있다.
 - 별도 소스·산출물 경로가 정해지고 빌드 로그가 보존된다.
-- QEMU에서 직접 만든 initramfs가 실행된다.
-- 기준 커널의 소스와 설정을 어떤 방식으로 재현할지 확정했다.
+- 공식 Nura 기준 rootfs의 릴리스·패키지·init 경로를 정적으로 확인한다. QEMU 자체 initramfs 실습은 별도 선택 과제다.
+- Nura kernel recipe와 선택한 SM-T500 변경의 출처·설정·도구 체인 대응을 확정했다.
 - 어떤 빌드 도구도 자동으로 기기에 기록하지 않는다.
 
 ## 참고

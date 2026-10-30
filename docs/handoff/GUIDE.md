@@ -33,7 +33,7 @@
 | 사용자 확인 | '부트로더를 해제했다'는 사용자 설명 |
 | 실측 사실 | 날짜·기기·명령·로그가 있는 boot 상태 |
 | 공개 자료 | 특정 source SHA의 BoardConfig 설정 |
-| 설계 결정 | Debian 12·Xfce·microSD 선택 |
+| 설계 결정 | Nura 26.06·Xfce·microSD 선택 |
 | 가설 | regulator 의존성 때문에 probe가 지연된다는 추론 |
 | 미확인 | 현재 vendor 버전·복원 성공 여부를 아직 보지 못함 |
 

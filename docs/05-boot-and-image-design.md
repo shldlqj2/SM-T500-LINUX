@@ -2,7 +2,7 @@
 
 ## 목적·선행 조건
 
-검증된 boot 이미지 구조를 보존하면서 Android init 대신 자체 initramfs와 Debian을 실행한다. [기기 기준표](02-device-investigation.md), [복구 관문](03-backup-and-recovery.md), 대응 이미지 확보가 선행 조건이다.
+검증된 boot 이미지 계약을 지키며 SM-T500용 kernel·DT와 Nura 표준 initramfs를 통해 microSD의 Nura 26.06을 실행한다. [포팅 계획](14-nura-26.06-port-plan.md)과 D014가 기본 구현을 정한다. 실기기 기록에는 [기기 기준표](02-device-investigation.md), [복구 관문](03-backup-and-recovery.md), 대응 이미지 확보가 선행 조건이다.
 
 ## 공개 자료와 실제 기준
 
@@ -11,6 +11,8 @@
 LineageOS BoardConfigCommon의 ramdisk offset 표기는 0x020000000이고 참고 Ubuntu Touch deviceinfo는 0x02000000이다. 어느 값을 임의로 정답이라 고르지 않는다. 정상 이미지 분석 결과와 검증된 build recipe를 기준으로 차이를 해소한다.
 
 현재 확인하지 않은 값에는 기본값을 넣지 않는다. mkbootimg의 offset 값과 실제 물리 배치, DT reserved-memory 주소도 구분한다.
+
+2026-10-30 [제공 순정 패키지](firmware/T500XXS8CXG1.md)의 boot/recovery를 분석했다. 이 파일은 header v2·page 4096·ramdisk 주소 `0x02000000`·DTB 주소 `0x01f00000`을 기록한다. 값의 근거는 제공된 이미지이며 공개 브랜치 설정이나 실기기 메모리 관측과 구분한다. 이 패키지를 기기 기준으로 확정하는 단계는 One UI 재설치·조사 후다.
 
 ## 이미지 분석·조립 순서
 
@@ -45,17 +47,19 @@ LineageOS BoardConfigCommon의 ramdisk offset 표기는 0x020000000이고 참고
 
 ## initramfs 설계
 
-초기 /init은 정적 BusyBox 기반이다. 핵심 기능은 디버깅과 rootfs 전환이며 Android 서비스를 실행하지 않는다.
+2026-10-30 [N2](research/nura-n2-dt-2026-10-30.md)에서 공식 LTS 6.18.35·SM-T500 시험 DT·표준 initramfs를 생성하고 PHY 모듈 포함·release/해시를 검사했다. 공식 vmlinuz는 EFI zboot여서 소스 header와 대조해 ARM64 Image.gz를 추출했으며 Samsung boot 수용·배치는 미검증이다. boot.img·대응 SD 이미지·UUID/실패 정책이 남아 있어 아래 목표의 실기기 구현 완료를 뜻하지 않는다.
+
+Nura v26.06의 표준 initramfs 생성·부팅 경로를 우선 사용한다. SM-T500의 SD·firmware·USB 진단에 필요한 기기별 변경만 추가하며 실제 표준 동작과 부족한 기능을 먼저 조사한다. 아래는 필요한 동작의 목표이며 이미 구현된 Nura 동작 목록이 아니다. 기존 정적 BusyBox 자체 /init 전체 구현은 학습 실습으로 남긴다.
 
 ~~~text
-PID 1 /init
+Nura 표준 initramfs (실제 버전·구성 확정 예정)
   → proc / sysfs / devtmpfs / run 준비
   → 부팅 단계 로그, USB ACM 진단 준비
   → 필요한 모듈·펌웨어 준비
-  → 지정 UUID의 SD rootfs 탐색 (기본 30초)
+  → 지정 UUID의 SD rootfs 탐색 (제한 시간·정책 확인 후 확정)
   → 읽기 전용 mount와 marker·init·호환 manifest 검사
   → 검증된 정상 rootfs로 전환
-  → exec switch_root ... /sbin/init
+  → Nura 표준 root 전환 경로 → systemd (host PID 1)
 ~~~
 
 MMC·SD host·clock·regulator·partition parser·ext4와 USB 진단 의존성은 built-in을 우선한다. 모듈이 필요하면 initramfs에 대응 모듈과 의존성을 함께 포함한다. rootfs를 읽어야 rootfs 접근 드라이버를 로딩할 수 있는 순환 의존을 만들지 않는다.
@@ -94,7 +98,7 @@ ramoops 주소는 DT와 reserved-memory에서 확인한다. 겹치는 메모리�
 
 ## 완료 조건·산출물
 
-정상 이미지 분석 보고서, 설명 가능한 재조립 차이, initramfs 로그, SD 실패 처리 기록, Debian PID 1 관측, 정상 이미지 복원 시험을 남긴다. 실제 합격 횟수와 회귀시험은 [검증 문서](11-validation-and-milestones.md)를 따른다.
+정상 이미지 분석 보고서, 설명 가능한 재조립 차이, Nura initramfs 버전·기기별 변경·로그, SD 실패 처리 기록, systemd PID 1 관측, 정상 이미지 복원 시험을 남긴다. 실제 합격 횟수와 회귀시험은 [검증 문서](11-validation-and-milestones.md)를 따른다.
 
 ## 참고
 

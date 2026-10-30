@@ -1,0 +1,125 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * SM-T500 Wi-Fi: 정적 컴파일용 초안. 실기기 부팅용 DT가 아니다.
+ * 출처와 미확인 사항: README.md, docs/research/nura-n2-dt-2026-10-30.md.
+ */
+
+/dts-v1/;
+
+#include "sm6115.dtsi"
+#include "pm6125.dtsi"
+
+/ {
+	model = "Samsung Galaxy Tab A7 Wi-Fi (SM-T500)";
+	compatible = "samsung,gta4lwifi", "qcom,sm6115";
+	chassis-type = "tablet";
+
+	aliases {
+		mmc0 = &sdhc_2;
+	};
+};
+
+&rpm_requests {
+	regulators {
+		compatible = "qcom,rpm-pm6125-regulators";
+
+		pm6125_l4: l4 {
+			regulator-min-microvolt = <488000>;
+			regulator-max-microvolt = <1000000>;
+		};
+
+		pm6125_l5: l5 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <2960000>;
+			regulator-allow-set-load;
+		};
+
+		/* mainline SDHCI에는 downstream vdd-io-bias-supply가 없다. */
+		pm6125_l7: l7 {
+			regulator-min-microvolt = <1256000>;
+			regulator-max-microvolt = <1256000>;
+			regulator-always-on;
+		};
+
+		pm6125_l12: l12 {
+			regulator-min-microvolt = <1624000>;
+			regulator-max-microvolt = <1984000>;
+		};
+
+		pm6125_l15: l15 {
+			regulator-min-microvolt = <2920000>;
+			regulator-max-microvolt = <3232000>;
+		};
+
+		pm6125_l22: l22 {
+			regulator-min-microvolt = <2960000>;
+			regulator-max-microvolt = <2960000>;
+			regulator-allow-set-load;
+		};
+	};
+};
+
+&sdhc_2 {
+	vmmc-supply = <&pm6125_l22>;
+	vqmmc-supply = <&pm6125_l5>;
+	cd-gpios = <&tlmm 88 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc2_state_on &sdc2_cd_on>;
+	pinctrl-1 = <&sdc2_state_off &sdc2_cd_off>;
+	no-mmc;
+	no-sdio;
+	status = "okay";
+};
+
+&sdc2_state_on {
+	data-pins {
+		drive-strength = <16>;
+	};
+};
+
+&sleep_clk {
+	clock-frequency = <32764>;
+};
+
+&tlmm {
+	sdc2_cd_on: sdc2-cd-on-state {
+		cd-pins {
+			pins = "gpio88";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-pull-up;
+		};
+	};
+
+	sdc2_cd_off: sdc2-cd-off-state {
+		cd-pins {
+			pins = "gpio88";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+};
+
+&usb {
+	status = "okay";
+};
+
+&usb_dwc3 {
+	/delete-property/ usb-role-switch;
+	maximum-speed = "high-speed";
+	dr_mode = "peripheral";
+	phys = <&usb_hsphy>;
+	phy-names = "usb2-phy";
+};
+
+&usb_hsphy {
+	vdd-supply = <&pm6125_l4>;
+	vdda-pll-supply = <&pm6125_l12>;
+	vdda-phy-dpdm-supply = <&pm6125_l15>;
+	status = "okay";
+};
+
+&xo_board {
+	clock-frequency = <19200000>;
+};

@@ -1,0 +1,2 @@
+# USB PHY는 공식 LTS 설정에서 모듈이다. SD host·DWC3는 built-in이다.
+phy-qcom-qusb2

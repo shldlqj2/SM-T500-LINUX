@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MIT
+# N2 오프라인 준비용. bootloader 선택·메모리 계약 검증 전에는 기기에 기록하지 않는다.
+deviceinfo_format_version="0"
+deviceinfo_name="Samsung Galaxy Tab A7 Wi-Fi (SM-T500)"
+deviceinfo_manufacturer="Samsung"
+deviceinfo_codename="samsung-gta4lwifi"
+deviceinfo_year="2020"
+deviceinfo_arch="aarch64"
+deviceinfo_dtb="qcom/sm6115-samsung-gta4lwifi"
+deviceinfo_chassis="tablet"
+deviceinfo_external_storage="true"
+deviceinfo_flash_method="none"
+deviceinfo_generate_bootimg="false"
+deviceinfo_create_initfs_extra="false"

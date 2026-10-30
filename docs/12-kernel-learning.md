@@ -79,4 +79,4 @@ SM-T500 포팅에 적용한 점:
 - [cgroup v2](https://docs.kernel.org/admin-guide/cgroup-v2.html)
 - [전원 관리](https://docs.kernel.org/power/index.html)
 
-이 링크는 개념 안내다. 실제 구현은 해당 커널 소스의 Documentation과 대조한다. 최신 문서의 API를 4.19에 그대로 적용하지 않는다.
+이 링크는 개념 안내다. 실제 구현은 선택한 Nura kernel 소스의 Documentation과 대조한다. 순정 4.19·기존 포트·선택 mainline/LTS 간 API 차이를 확인하며 서로의 코드를 그대로 적용하지 않는다.

@@ -1,6 +1,6 @@
 # Agent instructions
 
-이 저장소는 SM-T500 네이티브 Debian 포팅 및 커널 학습 프로젝트다. 문서는 한국어로 작성하고 코드·심볼·명령어는 원래 표기를 유지한다.
+이 저장소는 SM-T500 네이티브 Nura 26.06 포팅 및 커널 학습 프로젝트다. 문서는 한국어로 작성하고 코드·심볼·명령어는 원래 표기를 유지한다.
 
 ## 작업 시작
 
@@ -14,8 +14,10 @@
 ## 고정된 목표
 
 - SM-T500/gta4lwifi 전용. 다른 모델 이미지를 혼용하지 않는다.
-- 제조사 계열 커널·Debian 12 arm64·microSD ext4에서 시작한다.
-- 호스트 PID 1은 systemd, Docker는 Debian 호스트에서 실행한다.
+- Nura 26.06 공식 aarch64 패키지·기본 구성을 기준으로 microSD ext4 rootfs를 생성한다. 세부 기준은 [포팅 계획](docs/14-nura-26.06-port-plan.md)과 D014를 따른다.
+- 기존 Tab A7 postmarketOS 포트는 검증한 기기 정보·DTS·드라이버·firmware 관련 변경만 선택적으로 재사용한다. 기존 rootfs·오래된 kernel/config·설치 절차를 통째로 상속하지 않는다.
+- Nura 26.06 및 systemd·Docker와 호환되는 유지되는 mainline/LTS 커널을 우선 평가한다. 순정 제조사 커널은 하드웨어 조사·복구·비교 기준이다.
+- 호스트 PID 1은 systemd, Docker는 Nura 호스트에서 실행한다.
 - Xfce에 터치·화면 키보드·회전을 추가한다.
 - 화면·터치·Wi-Fi·Bluetooth를 우선하고 나머지 기능도 추적한다.
 - 표준 Linux 경로를 우선하며 막힌 기능에는 제한적 Android HAL을 허용한다.

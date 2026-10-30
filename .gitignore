@@ -6,10 +6,16 @@
 /sources/
 /logs/
 /tmp/
+/SAMFW.COM_SM-T500_XAR_T500XXS8CXG1_fac/
+/SAMFW.COM_*/
 *.img
 *.img.*
 *.bin
 *.tar.md5
+*.lz4
+*.dtb
+*.dtbo
+*.apk
 *.iso
 *.qcow2
 *.vhdx

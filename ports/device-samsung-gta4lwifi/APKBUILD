@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: MIT
+# N2 offline kernel/DT/initramfs staging; no flashable boot image is provided.
+pkgname=device-samsung-gta4lwifi
+pkgver=0.2
+pkgrel=0
+pkgdesc="Samsung Galaxy Tab A7 Wi-Fi SM-T500 (experimental offline staging)"
+url="https://nura.eco"
+license="MIT"
+arch="aarch64"
+options="!check !archcheck"
+depends="
+	postmarketos-base
+	linux-postmarketos-lts=6.18.35-r0
+	dtb-samsung-gta4lwifi=0.1-r0
+"
+makedepends="devicepkg-dev"
+source="deviceinfo modules-initfs"
+
+build() {
+	devicepkg_build "$startdir" "$pkgname"
+}
+
+package() {
+	devicepkg_package "$startdir" "$pkgname"
+}
+
+sha512sums="
+706d153114064730b35425c665d8e8551cc4e8fc0550df1c4ec44a342f3b91a984a3b65595b6639e37a273dcd0fb1f11c40743b5a85326caf1a9b9e2b3490ce4  deviceinfo
+7cdf52bf9eac0a88310d766302c9fb034873019d347624cddf6f3d9298078e97ce3a2b7e31ce622e48458ba0cd20feed7c3ad19b488cf6f0609b2d0a08103307  modules-initfs
+"

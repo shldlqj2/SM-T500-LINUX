@@ -1,0 +1,6 @@
+ports/**/APKBUILD text eol=lf
+ports/**/deviceinfo text eol=lf
+ports/**/modules-initfs text eol=lf
+ports/**/*.dts text eol=lf
+# unified diff의 빈 context 행은 공백 하나가 필요하다.
+ports/**/*.patch text eol=lf whitespace=-blank-at-eol

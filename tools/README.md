@@ -1,6 +1,6 @@
 # 기기 조사 도구 v1
 
-Python 3.11 이상·표준 라이브러리로 실행한다. 현재 구현한 명령은 doctor --scope collect, collect, report다. 소스 준비·커널 빌드·artifact 검사는 다음 구현 단계다.
+Python 3.11 이상·표준 라이브러리로 실행한다. 현재 구현한 명령은 doctor --scope collect, collect, report다. 소스 준비·커널 빌드·artifact 검사는 미구현이다. D014 이후 실제 이미지·패키지 생성은 [Nura 26.06·pmbootstrap](../docs/14-nura-26.06-port-plan.md)을 우선하며 portctl의 추가 빌드 기능은 연동 범위를 다시 설계한다. 아래 수집기 실행 계약은 유지한다.
 
 basic·extended 수집과 보고서 생성은 가짜 ADB 및 합성 파일로 검증했다. 실기기 수집·root adapter·부팅·하드웨어 동작은 아직 검증하지 않았다. 전체 기준은 [수집기 설계](../docs/design/01-device-collector.md)와 [데이터 계약](../docs/design/03-data-contracts.md)을 따른다.
 

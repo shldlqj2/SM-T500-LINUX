@@ -4,13 +4,15 @@
 
 USB 진단 또는 SSH와 정상 복구 이미지가 준비된 뒤 기능별 실험을 시작한다. 충전·온도 기본 관측은 첫 부팅부터 진행한다. 공개 기기 사양의 기능을 그대로 탑재 목록으로 확정하지 않고 [기기 조사](02-device-investigation.md)로 실제 목록을 만든다.
 
+위 조건은 실기기 기능 시험의 진입 조건이다. 제공 순정 패키지의 DT·내장 config·vendor 모듈·firmware·init rc·HAL 의존성 정적 조사는 One UI 재설치 전에도 진행한다. [D014의 Nura 26.06 포팅 계획](14-nura-26.06-port-plan.md)에 따라 장치별 대응 관계와 필요한 선별 이식부터 진행하며 단순 kernel/Docker 설정 보완만으로 하드웨어 이식이 끝난다고 취급하지 않는다.
+
 각 기능은 미조사 → 의존성 파악 → 구현 중 → 단독 검증 → 통합 검증 순서로 관리한다. '드라이버 로딩 성공', '장치 노드 존재', '앱에서 기능 사용'을 구분한다.
 
 ## 지원표 초기 상태
 
 아래 상태는 문서 작성 시점의 실제 값이다. 기존 LineageOS에서의 기능도 아직 직접 검사하지 않았다.
 
-| 기능 | 우선순위 | Debian 상태 | 주요 의존성 | 대표 증거 |
+| 기능 | 우선순위 | Nura 상태 | 주요 의존성 | 대표 증거 |
 | --- | --- | --- | --- | --- |
 | 기본 배터리·충전·thermal | 초기 안전 관측 | 미조사 | PMIC, gauge, charger, DT | 상태·온도·충전 추세 |
 | microSD | P0 부팅 | 미조사 | MMC host·전원·ext4 | UUID·읽기·쓰기 |
@@ -32,6 +34,10 @@ P2는 제외 기능이 아니다. 탑재하지 않은 기능은 증거와 함께
 
 ## 공통 드라이버 분석 양식
 
+분석 결과는 **실제 장치 → 선택된 DT node → kernel driver/모듈 → firmware·보정 데이터 → 초기화 서비스 → Nura가 사용할 API**로 연결한다. 순정 제조사 소스·기존 포트는 연결 정보를 읽는 자료로 쓰고 선택한 Nura mainline/LTS에서 필요한 지원을 확인한다. 소스에서 확인되지 않는 vendor 모듈·HAL의 ABI·초기화 동작에 REA를 사용한다. 순정 `.ko`는 kernel release·config·심볼 CRC 등 호환성을 확인해야 하며 임의의 Nura kernel에 복사하는 것으로 이식하지 않는다. Android HAL은 서비스·라이브러리 의존성과 호스트 bridge를 별도로 분석한다.
+
+장치별 완료 자료에는 재사용할 것, 재빌드/변경할 것, Nura 표준 서비스로 대체할 것, 제한적 HAL이 필요한 것과 그 근거를 기록한다. built-in 드라이버는 `.ko` 파일 목록에 나타나지 않을 수 있으므로 config·소스·DT를 함께 확인한다.
+
 ~~~text
 기능 / 실제 부품 / 하드웨어 변형:
 DT node·compatible / bus / driver source:
@@ -43,6 +49,21 @@ probe 로그 / 실패 errno / deferred 공급자:
 표준 Linux 경로의 장애 / HAL 필요성:
 다음 가설 / 정상 복귀 세트:
 ~~~
+
+## 제공 순정 자료의 조사 출발점
+
+2026-10-30 `T500XXS8CXG1`의 내장 config와 AP 내부 FOTA `META/vendor_filesystem_config.txt`를 대조했다. 아래는 후보 목록이며 실제 vendor 파일 내용·드라이버 bind·기능 사용은 아직 검증하지 않았다. 자세한 증거는 [순정 패키지 조사](firmware/T500XXS8CXG1.md)를 따른다.
+
+| 기능 | 순정 자료에서 확인한 후보 | 다음에 확인할 관계 |
+| --- | --- | --- |
+| 터치 | Himax HX83102·Synaptics·FocalTech·Novatek 계열 config, 여러 터치 firmware 경로 | 실제 부품·선택 DT·firmware 요청 이름·전원/IRQ·evdev |
+| Wi-Fi | `CONFIG_ICNSS=y`, 파일 목록의 `qca_cld3_wlan.ko`, Wi-Fi init rc/HAL 경로 | 실제 모듈의 modinfo·심볼/ABI·firmware·보정 자료·초기화 후 netdev |
+| Bluetooth | `CONFIG_MSM_BT_POWER=y`, QTI Bluetooth 서비스/rc 경로 | transport·전원·firmware 다운로드·표준 HCI 노출 여부 |
+| GPU | `CONFIG_QCOM_KGSL=y`, Adreno 관련 vendor 라이브러리 경로 | KGSL ABI·필요 userspace·호환 경로·실제 renderer |
+| 오디오 | `audio_machine_bengal.ko`, `audio_adsp_loader.ko` 등 오디오 모듈·mixer/정책 파일 경로 | codec/보드 선택·모듈 의존·DSP·mixer routing·ALSA/HAL |
+| microSD | `CONFIG_MMC_SDHCI_MSM=y`, 앞서 조사한 DT의 SD alias | 실제 선택 DT의 controller·전원/clock·카드 인식 |
+
+vendor 파일 목록에는 `.ko` 경로 30개가 선언돼 있다. 목록의 존재는 실제 파일 바이트·모듈 로딩을 확인한 것이 아니다. 동일 패키지의 여러 터치·GPU·오디오 후보를 모두 실물 부품으로 확정하지 않는다. 화면·백라이트는 GPU 가속과 구분해 panel/DSI/display driver를 별도로 추적한다.
 
 ## 화면·터치
 

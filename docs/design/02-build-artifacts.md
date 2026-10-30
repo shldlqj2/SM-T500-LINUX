@@ -2,6 +2,8 @@
 
 상태: 설계 확정, 코드·기기별 빌드 recipe 미구현, 실제 빌드 미실행.
 
+2026-10-30 D014 이후 현재 빌드 기본 경로는 [Nura 26.06·pmbootstrap](../14-nura-26.06-port-plan.md)이다. 아래 자체 sources/build 엔진 명세는 이전 설계로 보존하며 즉시 구현할 계획으로 취급하지 않는다. source provenance·최종 config·로그·산출물 무결성 원칙은 pmbootstrap 연동에도 유지한다. 연동 계약과 실제 명령은 후속 설계·구현 전까지 미구현이다. collection v1 구현·데이터 계약을 문서만으로 바꾸지 않는다.
+
 [개발 환경 계획](../04-development-environment.md)을 CLI와 파일 계약으로 구체화한다. 조사 결과는 [수집기 설계](01-device-collector.md), JSON 필드는 [데이터 계약](03-data-contracts.md)을 따른다.
 
 ## 1. 범위와 실행 경계

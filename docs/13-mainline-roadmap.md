@@ -2,13 +2,13 @@
 
 ## 위치와 목표
 
-제조사 커널의 정상 Debian 환경을 보존하면서 upstream Linux 기반 SM-T500 보드 지원을 개발한다. Debian 13 전환은 커널 이식과 구분해 검증한다. 높은 버전 번호나 부팅 로고만으로 메인라인 이식 완료를 선언하지 않는다.
+[D014](decisions.md)에 따라 Nura 26.06의 공식 공통 기반에 upstream Linux 기반 SM-T500 지원을 추가한다. mainline/LTS 평가는 초기 포팅 단계이며 별도 Debian 13 전환을 기다리는 장기 단계가 아니다. [포팅 계획](14-nura-26.06-port-plan.md)의 kernel 후보·기기별 변경 기준을 따른다. 높은 버전 번호나 부팅 로고만으로 메인라인 이식 완료를 선언하지 않는다.
 
 upstream에는 SM6115 공통 DTSI가 있지만 이것이 SM-T500 전체 보드 지원을 뜻하지 않는다. 패널·터치 변형·전원 배선·펌웨어·reserved-memory 등 기기별 지원을 별도로 확인해야 한다.
 
 ## 시작 조건
 
-- 마지막 정상 제조사 커널·모듈·DT·rootfs와 복구 기록이 있다.
+- 실기기 시험에는 정상 One UI/검증된 이미지와 복구 기록이 있다. 오프라인 지원 분석·빌드는 이와 독립적으로 진행할 수 있다.
 - 기기 기준표와 실제 부품 목록이 있다.
 - 화면 없이도 최소 하나의 관측 경로가 있거나 조기에 이를 만드는 계획이 있다.
 - 기능별 driver/API/firmware 의존성 표가 있다.
@@ -23,13 +23,13 @@ upstream에는 SM6115 공통 DTSI가 있지만 이것이 SM-T500 전체 보드 �
 | U0 비교 | upstream SoC·PMIC·보드 유사 사례와 vendor tree | 재사용·미지원 목록 |
 | U1 초기 부팅 | CPU·메모리·reserved regions·timer·IRQ | 커널 진입 로그 |
 | U2 공급자 | regulator·clock·pinctrl·bus | 필수 probe·의존성 충족 |
-| U3 진단·rootfs | USB·SD·ext4·initramfs | 콘솔·Debian 셸 |
+| U3 진단·rootfs | USB·SD·ext4·Nura initramfs | 콘솔·Nura 셸 |
 | U4 사용성 | panel·backlight·touch·buttons | GUI 입력 |
 | U5 무선 | Wi-Fi·Bluetooth·firmware | 연결·재연결 |
 | U6 전체 기능 | GPU·audio·camera·sensors·GNSS·PM | 기능별 검사 |
-| U7 전환 | Debian 13·runtime·업데이트 | 전체 회귀·복구·장기 유지 명세 |
+| U7 유지 | Nura 릴리스·kernel/runtime 업데이트 | 전체 회귀·복구·장기 유지 명세 |
 
-기능이 부족한 메인라인 이미지는 연구 세트로 둔다. 원래 기능표를 낮춰서 '완료'로 만들지 않는다. 실제 전환은 필요한 기능과 안정성을 확보한 후 수행한다.
+기능이 부족한 초기 Nura/mainline 이미지는 연구 세트로 둔다. 원래 기능표를 낮춰서 '완료'로 만들지 않는다. 실사용 전환은 필요한 기능과 안정성을 확보한 후 수행한다.
 
 ## DT와 드라이버 원칙
 
@@ -47,11 +47,11 @@ reserved-memory는 firmware·secure world·remote processor 사용 영역을 조
 
 HAL은 표준 경로로 대체한 기능부터 제거한다. 제거 전후 단독·통합 시험과 메모리·CPU·전원 비용을 비교한다. firmware 사용까지 곧바로 제거할 수 있다고 가정하지 않는다.
 
-## Debian 13 전환
+## Nura 릴리스 업데이트
 
-별도 rootfs 이미지로 생성하고 먼저 기본 부팅·systemd·udev·network·Docker를 시험한다. 커널 변경과 배포판 업그레이드를 동시에 해 원인 분리를 어렵게 만들지 않는다.
+현재 기준은 v26.06이다. 후속 릴리스는 별도 rootfs 이미지로 생성하고 먼저 기본 부팅·systemd·udev·network·Docker를 시험한다. kernel 변경과 배포판 업그레이드를 동시에 해 원인 분리를 어렵게 만들지 않는다.
 
-새 systemd·container runtime·Mesa·BlueZ의 실제 kernel/API 요구사항을 조사한다. 사용자 공간 요구를 낮추는 임시 우회와 기능 동등성 달성을 구분한다. rollback용 Debian 12 이미지를 보존한다.
+새 systemd·container runtime·Mesa·BlueZ의 실제 kernel/API 요구사항을 조사한다. 사용자 공간 요구를 낮추는 임시 우회와 기능 동등성 달성을 구분한다. 검증된 Nura 정상 이미지와 별도의 One UI 복구 경로를 보존한다.
 
 ## 패치와 유지관리
 

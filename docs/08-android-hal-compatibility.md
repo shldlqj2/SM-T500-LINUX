@@ -2,12 +2,12 @@
 
 ## 목적과 경계
 
-일반 Linux 드라이버·서비스만으로 접근하기 어려운 하드웨어에 Android vendor 구성요소를 제한적으로 사용한다. Debian을 Android 안에서 실행하는 방식으로 바꾸지 않는다.
+일반 Linux 드라이버·서비스만으로 접근하기 어려운 하드웨어에 Android vendor 구성요소를 제한적으로 사용한다. Nura를 Android 안에서 실행하는 방식으로 바꾸지 않는다. D014의 Nura 26.06/mainline 우선 경로를 먼저 평가한다.
 
 ~~~text
 하나의 Linux kernel
 └─ host PID namespace: systemd (PID 1)
-   ├─ Debian services / Xfce / Docker
+   ├─ Nura services / Xfce / Docker
    └─ LXC process (host에서 일반 PID)
       └─ container PID namespace: Android init (PID 1)
          └─ 필요한 vendor/HAL services
@@ -22,7 +22,7 @@
 | Linux VM | 모든 프로세스의 메모리 할당·회수·swap·OOM 담당 |
 | systemd/cgroups | 호스트에서 서비스와 컨테이너 자원 제어 |
 | Android lmkd | 사용자 공간 메모리 압박 처리 데몬. 초기 HAL 구성에서 실행하지 않음 |
-| legacy kernel LMK | 해당 소스·설정·모듈에 존재하는지 조사. 존재 시 Debian용 구성에서 전역 영향을 제거 |
+| legacy kernel LMK | 해당 소스·설정·모듈에 존재하는지 조사. Nura용 kernel에 필요 없이 도입하지 않으며 존재 시 전역 영향을 조사 |
 | Zygote/system_server | Android 앱 프레임워크가 목적이 아니므로 기본 실행 대상에서 제외 |
 | systemd-oomd | 초기에는 추가 정책 없이 커널/cgroup 동작을 먼저 측정 |
 
@@ -39,11 +39,11 @@ lmkd를 빼면 메모리 회수가 사라지는 것이 아니다. Linux 커널�
 5. 컨테이너 미실행 상태의 메모리·서비스·기능 기준을 측정한다.
 6. 한 기능부터 컨테이너에 연결하고 호스트 영향을 비교한다.
 
-기존 Halium 또는 Ubuntu Touch 포트의 성공은 일반 Debian에서의 성공 증거가 아니다. 특히 대응 Android 12 vendor·ODM 요구와 현재 ROM 사용자 공간을 혼용하지 않는다.
+기존 Halium 또는 Ubuntu Touch 포트의 성공은 Nura에서의 성공 증거가 아니다. 특히 대응 Android vendor·ODM·libc·kernel ABI 요구와 Nura의 musl 사용자 공간을 혼용하지 않는다.
 
 ## 컨테이너 구성 원칙
 
-- Debian systemd unit으로 LXC 생명주기를 관리한다.
+- Nura systemd unit으로 LXC 생명주기를 관리한다.
 - Android/vendor 이미지는 기본 읽기 전용으로 제공한다.
 - 상태 파일과 임시 파일은 microSD의 별도 쓰기 영역에 둔다.
 - 필요한 장치 노드·socket·firmware 경로만 노출한다.
@@ -57,7 +57,7 @@ lmkd를 빼면 메모리 회수가 사라지는 것이 아니다. Linux 커널�
 
 ## 초기화 순서
 
-기기 드라이버·펌웨어 준비 → 필요한 node/권한 준비 → Android 서비스 관리자/Binder 준비 → 기능 HAL → host bridge → 해당 Debian 서비스 순서로 의존성을 둔다.
+기기 드라이버·펌웨어 준비 → 필요한 node/권한 준비 → Android 서비스 관리자/Binder 준비 → 기능 HAL → host bridge → 해당 Nura 서비스 순서로 의존성을 둔다.
 
 필요한 서비스가 readiness 신호를 내기 전 단순 sleep 시간만으로 후속 서비스를 시작하지 않는다. 제한된 timeout과 실패 로그를 제공한다. HAL 없이도 SSH·기본 systemd·Docker가 올라오는 상태를 유지한다.
 
@@ -76,7 +76,7 @@ lmkd를 빼면 메모리 회수가 사라지는 것이 아니다. Linux 커널�
 
 ## 실패와 복구
 
-HAL 시작 실패는 해당 기능을 unavailable로 표시하고 Debian 기본 부팅은 유지한다. 부팅 전체가 HAL에 의존하게 된 경우 그 의존성을 먼저 수정한다. driver crash는 정상 kernel/DT/firmware 세트로 복귀해 최소 재현을 만든다.
+HAL 시작 실패는 해당 기능을 unavailable로 표시하고 Nura 기본 부팅은 유지한다. 부팅 전체가 HAL에 의존하게 된 경우 그 의존성을 먼저 수정한다. driver crash는 정상 kernel/DT/firmware 세트로 복귀해 최소 재현을 만든다.
 
 완료 산출물은 service allowlist, dependency map, 이미지 provenance, 권한·마운트 목록, 메모리 비용, 장애 영향 범위, 재시작/복구 시험이다.
 

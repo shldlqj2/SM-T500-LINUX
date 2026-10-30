@@ -6,22 +6,26 @@
 
 공통 상태는 계획됨, 진행 중, 실행 완료·미검증, 검증 완료, 실패, 결과 미확인, 보류다. 명령 성공·컴파일 성공·부팅 성공·기능 성공을 분리한다.
 
+2026-10-30 [N2 기록](research/nura-n2-dt-2026-10-30.md)의 DT·기기 APK 빌드·공식 LTS 설치·표준 initramfs 생성/무결성 검사는 완료했다. 전체 binding에 upstream GPU 진단이 남고 boot 계약·실기기 관문이 미완료이므로 N2/M2 전체 합격·E2~E4 실기기 성공으로 표시하지 않는다.
+
 실험은 가능하면 한 층만 변경하고, 변경 전 정상 이미지와 동일 조건에서 비교한다. 새 변경이나 실패가 없으면 이미 통과한 검사를 불필요하게 반복하지 않는다. 커널·DT·firmware 변경은 영향받는 기능의 회귀검사를 요구한다.
 
 ## 진입·종료 관문
 
+D014 이후 Nura 26.06 기준으로 적용한다. [포팅 계획](14-nura-26.06-port-plan.md)의 N0~N4는 실행 준비의 세부 단계이며 이 문서의 실기기 합격·복구 기준을 대체하지 않는다.
+
 | 단계 | 진입 조건 | 작업 | 종료 조건 |
 | --- | --- | --- | --- |
 | M0 조사·복구 | 정확한 기기 접근 | 기준표·백업·복구 시험 | 정상 이미지 복원과 One UI 재설치 증거 |
-| M1 개발·QEMU | Linux 빌드 환경 | toolchain·initramfs 실습 | QEMU 자체 /init과 재현 명세 |
-| M2 커널 재현 | 대응 소스·M0 | 기존 설정 kernel/module 빌드 | Android 기준 기능 회귀 통과 |
-| M3 최소 Linux | M2·진단 경로 | initramfs·SD·Debian | systemd PID 1·셸·실패 진단 |
+| M1 Nura 개발 환경 | Linux 환경·공식 v26.06 입력 | pmbootstrap·최소 rootfs·선택적 QEMU 실습 | 도구/패키지 명세·os-release·해시·공통 구성 검사 |
+| M2 기기 지원 빌드 | 고정 kernel/source·기기 자료 | SM-T500 kernel/DT/module·Nura 기기 패키지 | 최종 config·DT·모듈·boot 계약의 정적 검사 |
+| M3 최소 Linux | M0·M2·진단 경로 | Nura initramfs·SD rootfs | systemd PID 1·셸·실패 진단 |
 | M4 서비스 | M3 | systemd·SSH·Docker | 네트워크·저장소·자원 제한 |
 | M5 우선 하드웨어 | 정상 복귀 세트 | GUI·터치·Wi-Fi·Bluetooth | 기능별 및 통합 시험 |
 | M6 전체 안정화 | 기능별 구현 | 나머지 기능·전원·장시간 | 전체 지원표와 회귀 기준 충족 |
-| M7 메인라인 | 제조사 기준 보존 | upstream board·drivers | 지원 기능을 검증하고 배포판 전환 |
+| M7 upstream·장기 유지 | 정상 Nura/복구 기준 보존 | board·driver upstream 정리·릴리스 업데이트 | 회귀·복구·업데이트 명세 |
 
-M1의 QEMU 학습은 M0와 독립적으로 진행할 수 있다. M0가 미완료면 커스텀 Linux 기록 단계는 시작하지 않는다. M5의 Bluetooth가 막혀도 독립된 다른 기능 연구는 진행하되 M5 완료로 표기하지 않는다.
+M1·M2의 오프라인 조사·이미지 생성·QEMU 학습은 M0와 독립적으로 진행할 수 있다. 자체 /init은 선택적 학습 과제이며 Nura 기본 이미지의 합격 조건이 아니다. M0가 미완료면 커스텀 Linux 기록 단계는 시작하지 않는다. M5의 Bluetooth가 막혀도 독립된 다른 기능 연구는 진행하되 M5 완료로 표기하지 않는다.
 
 ## E0~E6 실험 단위
 
@@ -29,13 +33,15 @@ M1의 QEMU 학습은 M0와 독립적으로 진행할 수 있다. M0가 미완료
 | --- | --- | --- |
 | E0 | 없음 | 현 ROM의 실제 정상/기존 실패 기준 |
 | E1 | 원본 boot 재패키징 | header·payload·metadata 해석과 도구 정확성 |
-| E2 | 기존 Android용 kernel/module 재빌드 | 소스·config·toolchain 대응 |
-| E3 | initramfs와 최소 필수 설정 | Android init 없이 진단 셸 |
+| E2 | 선택한 Nura용 kernel/DT/module 빌드 | 공식 기준·선별 이식·최종 config·toolchain 대응 |
+| E3 | Nura initramfs와 최소 기기별 변경 | 표준 부팅 경로·진단 셸 |
 | E4 | microSD rootfs | SD·filesystem·switch_root·PID 1 |
 | E5 | systemd·컨테이너 | 일반 Linux 서비스와 자원 격리 |
 | E6 | 기능별 변경 | 하드웨어와 사용자 공간의 연결 |
 
 E6는 화면, 터치, WLAN 등 세부 실험 ID로 나눈다. 앞선 실험과의 의존성이 있는 변경은 반드시 같이 명시한다.
+
+공식 base에서 SM-T500용 kernel·DT·initramfs·rootfs를 처음 연결하는 E2~E4는 필요한 의존 변경을 초기 실험 세트로 명시할 수 있다. 커널과 rootfs를 동시에 무관하게 바꾸는 반복 실험으로 확대하지 않는다. 처음부터 정상 Nura 이미지가 있었다고 가정하지 않는다.
 
 ## 인수 시험
 
@@ -85,21 +91,21 @@ kernel / DT / module / rootfs / firmware IDs:
 
 | 회차 | 작업 | 결과 |
 | --- | --- | --- |
-| 1 | ADB 준비·모델·ROM 식별 | 연결 및 대상 기록 |
-| 2 | 파티션·DT·config 조사 | 기준표 초안 |
-| 3 | 개인·고유 자료·정상 이미지 백업 | 해시·위치 목록 |
-| 4 | ROM·소스·순정 펌웨어 대응 | 기준 버전 명세 |
-| 5 | Download Mode·recovery·정상 복원 | 실험 복구 증거 |
-| 6 | One UI 재설치·기준 ROM 복원 | 순정 복귀·기준표 갱신 |
-| 7 | WSL·toolchain·QEMU | 환경 명세·부팅 로그 |
-| 8 | 최소 initramfs 실습 | 자체 /init 동작 |
-| 9 | 정상 boot 분석·재패키징 | 차이 보고서 |
-| 10 | 대응 커널 첫 빌드 | kernel/module 명세 |
+| 1 | v26.06 입력·pmbootstrap 환경 요구 확인 | 기준 SHA·도구 요구 |
+| 2 | SM-T500 자료·기존 포트 선별 목록 | DT/driver/firmware 재사용 근거 |
+| 3 | pmbootstrap 준비·최소 콘솔 rootfs 생성 | 도구·저장소·패키지·os-release 명세 |
+| 4 | kernel 후보·SoC/보드·container config 조사 | 출처·누락 지원·기기별 변경 목록 |
+| 5 | ADB·모델·ROM·리비전·파티션 확인 | 실제 기기 기준표 |
+| 6 | 개인·고유 자료·정상 이미지 백업 | 해시·복구 조건 |
+| 7 | Download Mode·One UI 재설치·정상 복원 | 순정 관측·복구 증거 |
+| 8 | SM-T500 deviceinfo·DT·config·modules 빌드 | 정적 산출물 대응·로그 |
+| 9 | Nura initramfs·SD/USB 초기 경로 연결 | boot 계약·진단/실패 정책 |
+| 10 | 관문 충족 후 첫 실기기 Nura 부팅 | kernel/initramfs/SD/systemd 단계별 관측 |
 
 회차는 2시간 작업 슬롯의 순서다. 실제로 오래 걸리는 복구·빌드는 여러 슬롯에 걸쳐 수행한다. 시간에 맞추기 위해 관문을 생략하지 않는다.
 
 ## 일정의 해석
 
-조사·복구·재현·진단 기반 4~8주, Debian·서비스 추가 3~6주, 우선 기능 시제품 전체 약 3~6개월을 초기 추정으로 둔다. 전체 기능과 메인라인은 별도 장기 단계다. 이는 학습·연구를 포함한 가정이며 일정 보장이 아니다.
+D014 이전 Debian/제조사 커널 전제의 기간 추정은 현재 일정으로 사용하지 않는다. Nura 도구 준비·최소 rootfs·SM-T500 kernel/DT 의존성을 실제로 확인한 뒤 재산정한다. 하루 2시간 학습 기준은 유지하며 기능 완료 시점은 보장하지 않는다.
 
 매주 통과한 시험, 실패 증거, 미확인 의존성, 다음 3개 행동을 갱신한다. 기한보다 관측 가능한 진전을 기록한다.

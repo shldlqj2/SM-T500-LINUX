@@ -1,23 +1,23 @@
-# 09. Debian 사용자 공간·터치 데스크톱·Docker
+# 09. Nura 사용자 공간·터치 데스크톱·Docker
 
 ## 선행 조건과 기본값
 
-Debian 12 bookworm arm64 minimal, systemd, SSH, NetworkManager, Xfce/X11, Onboard를 기준으로 한다. [부팅 설계](05-boot-and-image-design.md)에 따라 microSD rootfs로 직접 전환한다. 초기에는 내부 userdata나 Android의 /data 파일시스템을 변경하지 않는다.
+Nura 26.06 aarch64 공식 패키지·기본 구성, systemd, SSH, 네트워크 서비스를 기준으로 한다. [포팅 계획](14-nura-26.06-port-plan.md)과 [부팅 설계](05-boot-and-image-design.md)에 따라 microSD rootfs로 전환한다. Xfce/X11·화면 키보드·회전 목표는 유지하며 v26.06의 실제 UI/패키지·systemd 조합을 확인한다. 파일명은 기존 문서 링크 보존을 위해 유지했다. 초기에는 내부 userdata나 Android의 /data 파일시스템을 변경하지 않는다.
 
 ## rootfs 생성
 
-1. debootstrap으로 bookworm/arm64 최소 rootfs 생성.
-2. x86-64 호스트에서 foreign second stage가 필요하면 검증한 QEMU userspace 경로 사용.
-3. apt keyring·저장소 서명 검증을 유지하고 사용한 패키지 버전 목록 저장.
-4. systemd-sysv·udev·DBus·기본 네트워크·SSH 등 최소 부팅 패키지 추가.
-5. 대응 /lib/modules, firmware, fstab, hostname, 사용자 계정, SSH 키 구성.
-6. 4.19 호환 ext4 feature로 이미지 생성하고 UUID와 marker 기록.
-7. rootfs 내용·권한·동적 loader·/sbin/init 링크 검사.
-8. QEMU에서 가능한 사용자 공간 시험 후 실제 커널에서 재검증.
+1. 고정한 v26.06 pmaports와 호환 pmbootstrap·서비스 관리자를 지정한다.
+2. 공식 Nura/Alpine 3.24의 aarch64 패키지로 최소 콘솔 rootfs를 생성한다. 다른 Tab A7 rootfs를 입력으로 사용하지 않는다.
+3. apk keyring·저장소 서명 검증을 유지하고 사용한 저장소·패키지 버전·APK 해시를 저장한다. edge와 섞지 않는다.
+4. Nura 표준 systemd·udev·DBus·네트워크·SSH 구성을 먼저 사용하고 기기별 차이만 추가한다.
+5. 대응 /lib/modules, firmware, fstab, hostname, 사용자 계정, SSH 키를 Nura 패키지/설정 경로로 구성한다.
+6. 선택한 kernel이 지원하는 ext4 feature로 이미지 생성하고 UUID와 호환 manifest를 기록한다. 실제 SD 쓰기와 파일 이미지 생성을 구분한다.
+7. os-release의 배포판·버전·arch, rootfs 내용·권한·musl loader·systemd init 경로를 검사한다.
+8. 가능한 공통 사용자 공간 시험 후 SM-T500용 kernel·DT·모듈에서 재검증한다.
 
 QEMU virt 시험용 rootfs는 virt 전용 모듈과 기기용 모듈이 혼동되지 않게 별도 식별한다. mmc 장치 순서를 고정하지 않고 UUID로 마운트한다. 부팅에 필요하지 않은 SD 교환 파티션은 v1에서 만들지 않는다.
 
-포트 전용 커널의 설치·업데이트 경로를 문서화하고 일반 Debian 커널 패키지가 현재 boot 이미지를 자동 대체한다고 가정하지 않는다. apt 업데이트와 태블릿 커널 업데이트는 별도 작업이다.
+Nura의 kernel 패키지·boot-deploy·initramfs 업데이트 경로와 SM-T500 기기 패키지의 역할을 확인한다. apk 업데이트가 실제 boot 영역과 정상 복귀 세트에 미치는 영향을 검증하기 전 자동 기록 동작을 허용하지 않는다.
 
 ## 최소 서비스
 
@@ -51,7 +51,7 @@ Onboard는 패널에서 항상 터치로 호출할 수 있게 한다. 앱 포커
 
 ## Docker Engine
 
-초기 패키지는 Debian bookworm의 docker.io·containerd·runc 조합으로 검증한다. 외부 저장소의 최신 Docker로 자동 교체하지 않는다. 실제 설치 시 지원·보안 상태와 arm64 패키지를 확인하고 기록한다.
+초기 패키지는 Nura v26.06/Alpine 3.24에서 제공하는 aarch64 Docker Engine·containerd·runc와 systemd 서비스 조합으로 검증한다. 실제 패키지 이름·버전·저장소를 확인하고 명세에 고정한다. 다른 릴리스·외부 최신 바이너리로 자동 교체하지 않는다.
 
 일반 rootful Engine으로 시작한다. 시험 컨테이너는 privileged 모드를 사용하지 않고 필요 없는 host device·host network를 전달하지 않는다. Docker 그룹은 강한 호스트 권한을 가지므로 사용자 편의를 위해 자동 추가하지 않는다.
 
@@ -64,7 +64,7 @@ Onboard는 패널에서 항상 터치로 호출할 수 있게 한다. 앱 포커
 5. veth·bridge·netfilter·NAT·DNS·포트 공개.
 6. 영속 볼륨·정상 종료·재부팅 후 재시작.
 
-docker info의 kernel·cgroup driver/version·storage driver를 기록한다. v2를 우선하고 기능이 부족하면 별도 v1 부팅 프로필로 시험한다. v1/v2를 서비스 실행 중 섞어 전환하지 않는다.
+docker info의 kernel·cgroup driver/version·storage driver 또는 snapshotter를 기록한다. cgroup v2를 기준으로 검증하며 부족하면 선택 kernel·runtime·systemd 요구부터 대조한다. 과거 v1 부팅 프로필을 기본 해결책으로 상속하지 않는다.
 
 iptables/nft 사용 여부는 설치 패키지와 커널 기능을 대조해 정한다. 네트워크 문제가 생기면 namespace → veth → bridge → forwarding → netfilter → uplink 순서로 조사한다. 원인 없이 방화벽을 전부 비활성화하지 않는다.
 
@@ -85,7 +85,7 @@ rootfs recipe·패키지 명세, systemd units, GUI 설정, 터치 조작 시험
 
 ## 참고
 
-- [Debian bookworm](https://www.debian.org/releases/bookworm/index)
-- [Debian docker.io 패키지](https://packages.debian.org/bookworm/docker.io)
+- [Nura 26.06 발표](https://nura.eco/blog/2026/06/21/v26.06-release/)
+- [Alpine 3.24 aarch64 Docker 패키지](https://pkgs.alpinelinux.org/package/v3.24/community/aarch64/docker)
 - [Docker daemon 진단](https://docs.docker.com/engine/daemon/troubleshoot/)
 - [Xfce 접근성](https://docs.xfce.org/xfce/xfce4-settings/accessibility)
