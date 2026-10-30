@@ -6,7 +6,7 @@
 - 작성 주체: 현재 주 에이전트.
 - 현재 단계: **N2 오프라인 준비 부분 완료**. 시험 DT·기기 APK를 빌드하고 공식 LTS 6.18.35-r0·모듈·표준 initramfs를 연결했다. `pmbootstrap install --no-image`와 383개 패키지의 저장소 신뢰 경로 검사는 종료 0. kernel 전체 로컬 컴파일·boot.img 생성·N2 ext4 rootfs 파일·실기기 검증은 미실행이다. 전체 DT binding의 upstream GPU 진단과 DT 선택·메모리/boot·SD 실패 정책이 남아 N2/M2 전체 합격은 아니다.
 - 기록 상태: doctor/collect/report·basic/extended probe·collection JSON 계약 검사·설명 보고서 구현. 실기기 수집은 미실행이고 자체 sources/build CLI는 미구현이다. N1은 pmbootstrap 표준 도구로 실행했다.
-- 이번 실행 범위: 이전 세션의 N2 산출물·로그를 읽기 전용으로 대조하고 누락된 APK 신뢰 경로 검증·산출물 복사·문서 갱신을 완료했다. [N2 실행 기록](docs/research/nura-n2-dt-2026-10-30.md)·D015를 따른다. 기기 접근·기록·재부팅·실제 SD 쓰기는 없었다. [N1](docs/research/nura-n1-rootfs-2026-10-30.md) 준비 이미지는 별도 세트로 보존한다.
+- 이번 실행 범위: 이전 세션의 N2 산출물·로그 대조, APK 신뢰 경로 검증·산출물 복사·문서 갱신에 이어 사용자가 요청한 Git 게시 검토·커밋·푸시를 수행했다. [N2 실행 기록](docs/research/nura-n2-dt-2026-10-30.md)·D015 및 아래 게시 기록을 따른다. 기기 접근·기록·재부팅·실제 SD 쓰기는 없었다. [N1](docs/research/nura-n1-rootfs-2026-10-30.md) 준비 이미지는 별도 세트로 보존한다.
 - 후속 사용자 우선순위: 각 장치의 순정 driver·firmware·서비스 관계 분석을 먼저 진행한다. 이번 추가 조사는 내장 config와 동봉 vendor 파일 목록의 후보 대응까지 완료했으며 실제 vendor 모듈/HAL 내용 분석은 남아 있다.
 - 최신 사용자 확정: **Nura 26.06 공식 기본 구성을 바탕으로 포팅하고 기존 Tab A7 postmarketOS에서는 필요한 기기 정보·코드만 가져온다. SM-T500은 Wi-Fi 전용이므로 LTE 설정을 도입하지 않는다.** [실행 계획](docs/14-nura-26.06-port-plan.md)·D014가 이전 Debian/제조사 kernel 우선 계획을 대체한다. 실제 Nura 설치·부팅은 아직 미실행이다.
 - 버전 구분: 기존 Tab A7 prebuilt는 입력에 사용하지 않았다. N1/N2는 공식 v26.06·Alpine 3.24.3/aarch64·systemd 261이며 `os-release`는 `NAME=postmarketOS`, `VERSION_ID=v26.06`이다. N1 362개 패키지의 ext4 이미지와 N2 383개 패키지 트리를 구분한다. N1에는 N2 모듈이 없어 현재 kernel과 결합하지 않는다.
@@ -18,7 +18,10 @@
 - 사용자는 인수인계 작성·커밋을 요청했고 삼성 펌웨어를 자세히 확인해 문제가 있으면 제외하고 푸시하도록 명시했다. 현재 `master` → 기존 `origin/master`의 일반 푸시가 허용된 범위다. 기기 기록·다른 에이전트 실행은 요청하지 않았다.
 - [게시 검토](docs/firmware/redistribution-review-2026-10-30.md)·D016에 따라 전체 삼성 펌웨어 재배포 권한을 확인하지 못해 바이너리를 제외한다. AP·CSC/HOME_CSC는 GitHub 일반 Git 100MiB 제한도 초과한다. 원본 파일은 삭제/이동하지 않고 로컬에 보존한다.
 - 게시 대상은 이전부터 누적된 Nura 전환 문서·순정/기존 포트 분석 요약·N1/N2 실행 기록·`ports/` 소스·제외/개행 규칙이다. 펌웨어 원본과 `private/`·`artifacts/`·WSL 바이너리/로그·서명 개인 키·백업은 포함하지 않는다.
-- 커밋 전 Git index는 비어 있었고 현재 추적 파일에 금지 경로/이미지·펌웨어 payload가 없음을 확인했다. staged 실제 내용·도달 가능한 Git 이력·비밀값/식별자·파일 크기/형식·문서 링크를 검사한 결과는 `private/publication/20261030/`에 보존한다. 커밋·푸시의 관측 결과는 게시 후 이 절에 갱신한다.
+- 커밋 전 index는 비어 있었다. 게시한 36개 파일은 UTF-8 문서/소스 약 257KB이며 staged 실제 바이트에 펌웨어 payload·비밀값/실제 MAC 후보가 없었다. 기존 도달 가능한 Git blob 55개(최대 19,564 bytes)에도 금지 경로·대용량 blob이 없었다. 원본 펌웨어 5개 파일의 제외를 확인했다. 검사 JSON은 `private/publication/20261030/working-review.json`·`staged-review.json`에 있다. 패턴 검사와 파일별 내용/형식 검토를 함께 수행했으며 미래 파일의 무위험을 보증하는 결과는 아니다.
+- 게시 커밋: `3207891430ea223eb941fe87e449cf7aa3c40bc2`, `feat: stage Nura 26.06 SM-T500 port and record firmware review`. 36개 파일의 Nura 전환·N1/N2·인수인계·SPDX 소스·게시 검토/제외 규칙을 포함했다. 삼성 원본·추출물·N1/N2 바이너리는 포함하지 않았다.
+- 푸시 검증: 2026-10-30T16:26:46+09:00, Windows PowerShell/Python·저장소 루트에서 `git push origin master` 종료 0, `9800649..3207891 master -> master`를 관측했다. 후속 `git ls-remote origin refs/heads/master` 종료 0이며 HEAD·origin/master·실제 원격 SHA가 모두 위 commit과 일치했다. 명령/결과는 `main-commit.json`·`main-push.json`에 있다. 강제 푸시·이력 재작성·펌웨어 재배포는 수행하지 않았다.
+- 이 절은 위 푸시의 관측 결과를 남기는 후속 문서 변경이다. 문서 자체의 commit ID는 `git log -1`로 확인하고 최신 원격 상태는 다시 조회한다. 새 checkout에는 Git 제외 자료가 전달되지 않으므로 아래 동일 PC/WSL 자료 접근 경로를 함께 확인한다.
 - 다음 작업의 첫 행동은 태블릿 USB 연결 후 ADB의 설치·인식·인증 가능 여부를 읽기 전용으로 확인하는 것이다. 모델·부트로더 리비전·파티션·실제 DT를 조사하고 아래 최대 3개 작업의 완료 조건을 따른다. ADB/root가 가능하다고 가정하지 않는다.
 
 ## 목표와 현재 요청 범위
@@ -129,6 +132,7 @@
 - N2 rootfs: 위 N2 Linux 작업 공간의 `work/chroot_rootfs_samsung-gta4lwifi/` 패키지 트리(383개, 약 746MiB). ext4 파일을 내보내지 않았고 N1 이미지로 대체하지 않는다. 전체 rootfs·상세 install 로그에는 생성용 로그인 설정이 있어 그대로 공개하지 않는다.
 - N2 검증 증거: `private/nura/n2/`의 `stage-verification.json`·`manifest.json`·`resume-audit.json`·`repository-chain-result.json`·`delivery-result.json`·명령별 JSON. 상세 로그는 N2 WSL `logs/`와 `work/log.txt`다. trust 검증용 별도 `repository-validation-root/`는 오프라인·스크립트 비실행 설치 결과이며 부팅용 rootfs가 아니다.
 - N2 마무리 검사: 2026-10-30T16:17:00+09:00, Windows PowerShell/Python·저장소 루트에서 Markdown 30개·상대 링크 166개·문자/fence/공백·로컬 source SHA-512·산출물 복사본/입력 해시·공유용 N2 문서 내용·패키지 shell/Python 구문·`git diff --check`를 검사해 문제 0건·종료 0. WSL 읽기 전용 조회에서도 작업 mount·관련 프로세스·ARM64 binfmt 없음. 요약은 `private/nura/n2/final-validation.json`이다. 수집기 suite·kernel 전체 빌드·실기기 시험은 실행하지 않았다.
+- 게시 직전 재검증: 2026-10-30T16:26:22+09:00, 같은 환경에서 위 검사의 문서 수는 31개·상대 링크는 171개로 늘었고 문제 0건·종료 0을 확인했다. 최신 `private/nura/n2/final-validation.json`은 이 시점 결과다. 게시 검토에 추가한 제외/개행 규칙과 문서 외에 kernel·DT·rootfs를 변경하지 않았다.
 - 사용자 제공 원본: 저장소 루트 `SAMFW.COM_SM-T500_XAR_T500XXS8CXG1_fac/`. 원본 변경·이동 없음. `.gitignore`에 이 폴더를 추가해 안내 txt까지 제외했다.
 - 분석 자료: `private/firmware/T500XXS8CXG1/`의 `package-inventory.json`, `image-analysis.json`, `fota-metadata-inventory.json`, `rea-evidence.json`, 조사 스크립트·compressed/images/parts/fota-metadata 디렉터리. 전체 콘솔 로그는 별도 보관하지 않았고 세션 도구 출력에 있다. 구체 명령·환경·결과는 [조사 기록](docs/firmware/T500XXS8CXG1.md)을 따른다.
 - 초기 패키지 조사 검증 결과: Markdown 24개·상대 링크 106개·추출 자료 레코드 58개(일부 동일 파일 중복 참조)의 크기/SHA-256 대조에서 문제 0건. `git diff --check` 통과. 실행 환경은 Windows PowerShell/Python, cwd는 저장소 루트, 종료 코드 0이며 요약은 `private/firmware/T500XXS8CXG1/validation.json`에 있다. 빌드·실기기 시험은 수행하지 않았다.
